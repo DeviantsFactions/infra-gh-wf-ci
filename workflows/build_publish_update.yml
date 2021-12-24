@@ -1,0 +1,107 @@
+name: Build, Publish and Update
+
+on:
+  workflow_call:
+    inputs:
+      SERVICE_NAME:
+        required: true
+        type: string
+      GCRUN_SERVICE_NAME:
+        required: true
+        type: string
+      # preview, development, release, production
+      TYPE:
+        required: true
+        type: string
+      BRANCH_NAME:
+        type: string
+      PR_NUMBER:
+        type: number
+    secrets:
+      GCP_PROJECT_ID:
+        required: true
+      GCP_SA_GH_KEY:
+        required: true
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    # VARIABLES IN IMAGE NAME
+    env:
+      IMAGE_PATH: ${{ secrets.GCP_PROJECT_ID }}/${{ inputs.SERVICE_NAME }}
+      BRANCH_NAME: ${{ inputs.BRANCH_NAME }}
+      PR_NUMBER: ${{ inputs.PR_NUMBER }}
+
+    steps:
+      # CHECKOUT
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      # SET DYNAMIC VARS
+      ##  IMAGE_NAME_HASH
+      - name: Set image name with commit hash
+        shell: bash
+        run: |-
+          echo IMAGE_NAME_HASH=us.gcr.io/$IMAGE_PATH:$GITHUB_SHA >> $GITHUB_ENV
+      - run: echo $IMAGE_NAME_HASH
+      ##  TARGET IMAGE FROM BRANCH
+      - name: Set image name with branch name
+        if: ${{ (inputs.TYPE == 'development') || (inputs.TYPE == 'production') }}
+        shell: bash
+        run: |-
+          echo TARGET_IMAGE_NAME=us.gcr.io/$IMAGE_PATH:$BRANCH_NAME >> $GITHUB_ENV
+      ##  TARGET IMAGE FROM PR
+      - name: Set image name with PR number
+        if: ${{ (inputs.TYPE == 'preview') || (inputs.TYPE == 'release') }}
+        shell: bash
+        run: |-
+          echo TARGET_IMAGE_NAME=us.gcr.io/$IMAGE_PATH:pr-$PR_NUMBER >> $GITHUB_ENV
+      ### CHECK
+      - run: echo $TARGET_IMAGE_NAME
+
+      # SET PROVIDERS
+      ##  NODE
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '16.13.0'
+      ##  GCP AUTH
+      - id: auth
+        uses: google-github-actions/auth@v0
+        with:
+          credentials_json: ${{ secrets.GCP_SA_GH_KEY }}
+      ##  GCP SDK
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v0.3.0
+
+      # INSTALL DEPENDENCIES
+      ##  NODE
+      - run: npm install
+
+      # RUN TESTS
+      ##  NODE
+      - run: npm test
+
+      # BUILD
+      ##  BUILD ARTIFACT
+      - name: Docker build with branch name
+        run: |-
+          docker build --no-cache \
+          -t $TARGET_IMAGE_NAME \
+          -t $IMAGE_NAME_HASH \
+          . -f Dockerfile
+
+      ##  REGISTRY AUTH (GCR)
+      - run: |
+          gcloud auth configure-docker -q
+      ##  PUSH
+      - name: Docker push with branch name
+        run: |-
+          docker push $TARGET_IMAGE_NAME
+          docker push $IMAGE_NAME_HASH
+
+      # DEPLOY
+      - uses: 'google-github-actions/deploy-cloudrun@v0.6.0'
+        with:
+          service: ${{ inputs.GCRUN_SERVICE_NAME }}
+          image: ${{ env.TARGET_IMAGE_NAME }}
