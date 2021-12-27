@@ -76,11 +76,11 @@ jobs:
 
       # INSTALL DEPENDENCIES
       ##  NODE
-      - run: npm install
+      # - run: npm install
 
       # RUN TESTS
       ##  NODE
-      - run: npm test
+      # - run: npm test
 
       # BUILD
       ##  BUILD ARTIFACT
