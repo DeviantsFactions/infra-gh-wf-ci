@@ -101,7 +101,17 @@ jobs:
           docker push $IMAGE_NAME_HASH
 
       # DEPLOY
+      ## Withouth revision suffic
       - uses: 'google-github-actions/deploy-cloudrun@v0.6.0'
+        if: ${{ (inputs.TYPE != 'preview') }}
         with:
           service: ${{ inputs.GCRUN_SERVICE_NAME }}
           image: ${{ env.TARGET_IMAGE_NAME }}
+      ## With revision
+      - uses: 'google-github-actions/deploy-cloudrun@v0.6.0'
+        if: ${{ (inputs.TYPE == 'preview') }}
+        with:
+          service: ${{ inputs.GCRUN_SERVICE_NAME }}
+          image: ${{ env.TARGET_IMAGE_NAME }}
+          suffix: preview-${{ inputs.PR_NUMBER }}
+          # To do: LB logic
