@@ -47,13 +47,13 @@ jobs:
       - run: echo $IMAGE_NAME_HASH
       ##  TARGET IMAGE FROM BRANCH
       - name: Set image name with branch name
-        if: ${{ (inputs.TYPE == 'development') || (inputs.TYPE == 'production') }}
+        if: ${{ (inputs.TYPE != 'preview') }}
         shell: bash
         run: |-
           echo TARGET_IMAGE_NAME=us.gcr.io/$IMAGE_PATH:$BRANCH_NAME >> $GITHUB_ENV
       ##  TARGET IMAGE FROM PR
       - name: Set image name with PR number
-        if: ${{ (inputs.TYPE == 'preview') || (inputs.TYPE == 'release') }}
+        if: ${{ (inputs.TYPE == 'preview') }}
         shell: bash
         run: |-
           echo TARGET_IMAGE_NAME=us.gcr.io/$IMAGE_PATH:pr-$PR_NUMBER >> $GITHUB_ENV
