@@ -113,6 +113,6 @@ jobs:
         with:
           service: ${{ inputs.GCRUN_SERVICE_NAME }}
           image: ${{ env.TARGET_IMAGE_NAME }}
-          tag: preview-${{ inputs.PR_NUMBER }}
+          tag: ${{ inputs.SERVICE_NAME }}-preview-${{ inputs.PR_NUMBER }}
           suffix: -${{ inputs.PR_NUMBER }}
           # To do: LB logic
