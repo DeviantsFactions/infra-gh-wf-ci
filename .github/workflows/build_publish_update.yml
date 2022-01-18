@@ -68,7 +68,7 @@ jobs:
         with:
           node-version: '16.13.0'
       ##  GCP AUTH
-      - id: GCP Auth
+      - id: gcp-auth
         uses: DeviantsFactions/auth@v0
         with:
           credentials_json: ${{ secrets.GCP_SA_GH_KEY }}
