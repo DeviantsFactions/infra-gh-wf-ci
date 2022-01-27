@@ -41,6 +41,20 @@ jobs:
       PR_NUMBER: ${{ inputs.PR_NUMBER }}
 
     steps:
+      - name: Starting notification
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        uses: Ilshidur/action-discord@master
+        with:
+          args: |
+            
+            ----------------------------------------------
+
+            Starting
+            **${{ inputs.SERVICE_NAME }}** build.
+            Type: ${{ inputs.TYPE }}
+
+            ----------------------------------------------
       # CHECKOUT
       - name: Checkout
         uses: DeviantsFactions/checkout@v2
