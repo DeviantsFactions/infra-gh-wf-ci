@@ -44,8 +44,6 @@ jobs:
       # CHECKOUT
       - name: Checkout
         uses: DeviantsFactions/checkout@v2
-      - name: Step is going to fail
-        run: exit 1
       # SET DYNAMIC VARS
       ##  IMAGE_NAME_HASH
       - name: Set image name with commit hash
@@ -151,6 +149,6 @@ jobs:
             Failed
             **${{ inputs.SERVICE_NAME }}** build.
             Type: ${{ inputs.TYPE }}
-            Repo: https://github.com/${{ inputs.REPO }}/actions
+            Repo: https://github.com/DeviantsFactions/${{ inputs.REPO }}/actions
 
             ----------------------------------------------
