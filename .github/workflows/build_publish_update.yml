@@ -15,6 +15,9 @@ on:
       TYPE:
         required: true
         type: string
+      REPO:
+        required: true
+        type: string
       BRANCH_NAME:
         type: string
       PR_NUMBER:
@@ -145,6 +148,6 @@ jobs:
             Failed
             **${{ inputs.SERVICE_NAME }}** build.
             Type: ${{ inputs.TYPE }}
-            Repo: https://github.com/${{ GITHUB_REPOSITORY }}/actions
+            Repo: https://github.com/${{ inputs.REPO }}/actions
 
             ----------------------------------------------
