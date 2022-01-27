@@ -11,7 +11,7 @@ on:
       GCRUN_SERVICE_NAME:
         required: true
         type: string
-      # preview, development, release, production
+      # preview, release, production
       TYPE:
         required: true
         type: string
@@ -23,6 +23,8 @@ on:
       GCP_PROJECT_ID:
         required: true
       GCP_SA_GH_KEY:
+        required: true
+      DISCORD_WEBHOOK:
         required: true
 
 jobs:
@@ -118,3 +120,31 @@ jobs:
           tag: ${{ inputs.TAG_PREFIX }}-preview-${{ inputs.PR_NUMBER }}
           suffix: -${{ inputs.PR_NUMBER }}
           # To do: LB logic
+      - name: Success notification
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        uses: Ilshidur/action-discord@master
+        with:
+          args: |
+            ----------------------------------------------
+
+            Success
+            **${{ inputs.SERVICE_NAME }}** build.
+            Type: ${{ inputs.TYPE }}
+
+            ----------------------------------------------
+      - name: Failure notification
+        if: ${{ failure() }}
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        uses: Ilshidur/action-discord@master
+        with:
+          args: |
+            ----------------------------------------------
+
+            Failed
+            **${{ inputs.SERVICE_NAME }}** build.
+            Type: ${{ inputs.TYPE }}
+            Repo: https://github.com/${{ GITHUB_REPOSITORY }}/actions
+
+            ----------------------------------------------
