@@ -27,7 +27,7 @@ on:
         type: string
       GH_RUN_NUMBER:
         required: true
-        type: number
+        type: string
     secrets:
       GCP_PROJECT_ID:
         required: true
