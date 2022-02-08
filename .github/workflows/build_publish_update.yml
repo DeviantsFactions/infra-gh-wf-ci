@@ -173,7 +173,7 @@ jobs:
       # DEPLOY mig
       - name: 'Update mig (Events handler)'
         if: ${{ (inputs.SERVICE_TYPE == 'mig') }}
-        run: 'gcloud compute instance-groups managed rolling-action replace events-mig'
+        run: 'gcloud compute instance-groups managed rolling-action replace --region us-central1 events-mig'
 
       # RESULTS:
       # Success
