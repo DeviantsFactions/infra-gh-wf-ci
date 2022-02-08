@@ -73,10 +73,10 @@ jobs:
             
             ----------------------------------------------
 
-            ${{ inputs.ACTOR }} started:
-            **${{ inputs.SERVICE_NAME }}** build ${{ inputs.GH_RUN_NUMBER }}.
+            *${{ inputs.ACTOR }}* started:
+            **${{ inputs.SERVICE_NAME }}** build *${{ inputs.GH_RUN_NUMBER }}*.
             URL: https://github.com/DeviantsFactions/${{ inputs.REPO }}/actions
-            Type: ${{ inputs.TYPE }}
+            Type: *${{ inputs.TYPE }}*
 
             ----------------------------------------------
       # CHECKOUT
@@ -170,8 +170,8 @@ jobs:
             ----------------------------------------------
 
             Success
-            **${{ inputs.SERVICE_NAME }}** build ${{ inputs.GH_RUN_NUMBER }}.
-            Type: ${{ inputs.TYPE }}
+            **${{ inputs.SERVICE_NAME }}** build *${{ inputs.GH_RUN_NUMBER }}*.
+            Type: *${{ inputs.TYPE }}*
 
             ----------------------------------------------
       - name: Failure notification
@@ -185,8 +185,8 @@ jobs:
             ----------------------------------------------
 
             Failed
-            **${{ inputs.SERVICE_NAME }}** build ${{ inputs.GH_RUN_NUMBER }}.
-            Type: ${{ inputs.TYPE }}
+            **${{ inputs.SERVICE_NAME }}** build *${{ inputs.GH_RUN_NUMBER }}*.
+            Type: *${{ inputs.TYPE }}*
             Repo: https://github.com/DeviantsFactions/${{ inputs.REPO }}/actions
 
             ----------------------------------------------
