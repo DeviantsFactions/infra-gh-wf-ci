@@ -70,7 +70,7 @@ jobs:
             
             ----------------------------------------------
 
-            {{ inputs.ACTOR }} started:
+            ${{ inputs.ACTOR }} started:
             **${{ inputs.SERVICE_NAME }}** build.
             URL: https://github.com/DeviantsFactions/${{ inputs.REPO }}/actions
             Type: ${{ inputs.TYPE }}
