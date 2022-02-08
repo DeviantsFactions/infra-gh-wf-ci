@@ -25,7 +25,7 @@ on:
       ACTOR:
         required: true
         type: string
-      BUILD_NUMBER:
+      GH_RUN_NUMBER:
         required: true
         type: number
     secrets:
@@ -74,7 +74,7 @@ jobs:
             ----------------------------------------------
 
             ${{ inputs.ACTOR }} started:
-            **${{ inputs.SERVICE_NAME }}** build ${{ inputs.BUILD_NUMBER }}.
+            **${{ inputs.SERVICE_NAME }}** build ${{ inputs.GH_RUN_NUMBER }}.
             URL: https://github.com/DeviantsFactions/${{ inputs.REPO }}/actions
             Type: ${{ inputs.TYPE }}
 
@@ -170,7 +170,7 @@ jobs:
             ----------------------------------------------
 
             Success
-            **${{ inputs.SERVICE_NAME }}** build ${{ inputs.BUILD_NUMBER }}.
+            **${{ inputs.SERVICE_NAME }}** build ${{ inputs.GH_RUN_NUMBER }}.
             Type: ${{ inputs.TYPE }}
 
             ----------------------------------------------
@@ -185,7 +185,7 @@ jobs:
             ----------------------------------------------
 
             Failed
-            **${{ inputs.SERVICE_NAME }}** build ${{ inputs.BUILD_NUMBER }}.
+            **${{ inputs.SERVICE_NAME }}** build ${{ inputs.GH_RUN_NUMBER }}.
             Type: ${{ inputs.TYPE }}
             Repo: https://github.com/DeviantsFactions/${{ inputs.REPO }}/actions
 
