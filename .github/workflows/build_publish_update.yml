@@ -32,7 +32,7 @@ on:
         required: true
       DISCORD_WEBHOOK:
         required: true
-      GITHUB_TOKEN:
+      GH_TOKEN:
         required: true
       SONAR_TOKEN:
         required: true
@@ -49,7 +49,7 @@ jobs:
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
   build-and-push:
     runs-on: ubuntu-latest
