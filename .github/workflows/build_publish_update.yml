@@ -35,7 +35,6 @@ on:
         # Types:
         # cloud_run
         # mig
-        required: true
         type: string
         default: 'cloud_run'
     secrets:
