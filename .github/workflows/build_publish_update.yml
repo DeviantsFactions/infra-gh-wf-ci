@@ -11,8 +11,11 @@ on:
       GCRUN_SERVICE_NAME:
         required: true
         type: string
-      # preview, release, production
       TYPE:
+        # Values:
+        # preview
+        # release
+        # production
         required: true
         type: string
       REPO:
@@ -28,6 +31,13 @@ on:
       GH_RUN_NUMBER:
         required: true
         type: string
+      SERVICE_TYPE:
+        # Types:
+        # cloud_run
+        # mig
+        required: true
+        type: string
+        default: 'cloud_run'
     secrets:
       GCP_PROJECT_ID:
         required: true
@@ -144,22 +154,30 @@ jobs:
           docker push $TARGET_IMAGE_NAME
           docker push $IMAGE_NAME_HASH
 
-      # DEPLOY
-      ## Withouth revision suffic
+      # DEPLOY Google Cloud Run
+      ## Withouth revision suffix
       - uses: 'DeviantsFactions/deploy-cloudrun@v0.6.0'
-        if: ${{ (inputs.TYPE != 'preview') }}
+        if: ${{ (inputs.TYPE != 'preview') && (inputs.SERVICE_TYPE == 'cloud_run') }}
         with:
           service: ${{ inputs.GCRUN_SERVICE_NAME }}
           image: ${{ env.TARGET_IMAGE_NAME }}
       ## With revision
       - uses: 'DeviantsFactions/deploy-cloudrun@v0.6.0'
-        if: ${{ (inputs.TYPE == 'preview') }}
+        if: ${{ (inputs.TYPE == 'preview') && (inputs.SERVICE_TYPE == 'cloud_run') }}
         with:
           service: ${{ inputs.GCRUN_SERVICE_NAME }}
           image: ${{ env.TARGET_IMAGE_NAME }}
           tag: ${{ inputs.TAG_PREFIX }}-preview-${{ inputs.PR_NUMBER }}
           suffix: -${{ inputs.PR_NUMBER }}
           # To do: LB logic
+
+      # DEPLOY mig
+      - name: 'Update mig (Events handler)'
+        if: ${{ (inputs.SERVICE_TYPE == 'mig') }}
+        run: 'gcloud compute instance-groups managed rolling-action replace events-mig'
+
+      # RESULTS:
+      # Success
       - name: Success notification
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
@@ -174,6 +192,7 @@ jobs:
             Type: *${{ inputs.TYPE }}*
 
             ----------------------------------------------
+      # Failure
       - name: Failure notification
         if: ${{ failure() }}
         env:
