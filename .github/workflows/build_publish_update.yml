@@ -39,7 +39,7 @@ on:
         default: 'cloud_run'
       REACT_APP_STAGE:
         type: string
-        default: 'staging'
+        default: ''
     secrets:
       GCP_PROJECT_ID:
         required: true
