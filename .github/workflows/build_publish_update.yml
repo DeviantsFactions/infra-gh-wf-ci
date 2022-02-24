@@ -40,6 +40,9 @@ on:
       REACT_APP_STAGE:
         type: string
         default: ''
+      RUN_SONAR:
+        type: boolean
+        default: false
     secrets:
       GCP_PROJECT_ID:
         required: true
@@ -54,7 +57,7 @@ on:
 
 jobs:
   sonarcloud:
-    if: ${{ (inputs.TYPE == 'preview') }}
+    if: ${{ (inputs.TYPE == 'preview') || (inputs.RUN_SONAR) }}
     name: SonarCloud
     runs-on: ubuntu-latest
     steps:
