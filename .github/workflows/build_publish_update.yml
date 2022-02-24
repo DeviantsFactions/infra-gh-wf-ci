@@ -74,7 +74,7 @@ jobs:
       IMAGE_PATH: ${{ secrets.GCP_PROJECT_ID }}/${{ inputs.SERVICE_NAME }}
       BRANCH_NAME: ${{ inputs.BRANCH_NAME }}
       PR_NUMBER: ${{ inputs.PR_NUMBER }}
-
+      STAGE: ${{ inputs.REACT_APP_STAGE }}
     steps:
       - name: Starting notification
         env:
@@ -145,7 +145,7 @@ jobs:
           docker build --no-cache \
           -t $TARGET_IMAGE_NAME \
           -t $IMAGE_NAME_HASH \
-          --build-arg REACT_APP_STAGE=${{ inputs.REACT_APP_STAGE }} \
+          --build-arg REACT_APP_STAGE=$STAGE \
           . -f Dockerfile
 
       ##  REGISTRY AUTH (GCR)
