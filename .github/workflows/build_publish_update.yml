@@ -145,7 +145,7 @@ jobs:
           docker build --no-cache \
           -t $TARGET_IMAGE_NAME \
           -t $IMAGE_NAME_HASH \
-          --build-arg REACT_APP_STAGE=${{ inputs.REACT_APP_STAGE }}
+          --build-arg REACT_APP_STAGE=${{ inputs.REACT_APP_STAGE }} \
           . -f Dockerfile
 
       ##  REGISTRY AUTH (GCR)
