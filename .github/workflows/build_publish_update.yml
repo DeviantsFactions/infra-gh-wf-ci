@@ -37,6 +37,9 @@ on:
         # mig
         type: string
         default: 'cloud_run'
+      REACT_APP_STAGE:
+        type: string
+        default: 'staging'
     secrets:
       GCP_PROJECT_ID:
         required: true
@@ -142,6 +145,7 @@ jobs:
           docker build --no-cache \
           -t $TARGET_IMAGE_NAME \
           -t $IMAGE_NAME_HASH \
+          --build-arg REACT_APP_STAGE=${{ inputs.REACT_APP_STAGE }}
           . -f Dockerfile
 
       ##  REGISTRY AUTH (GCR)
