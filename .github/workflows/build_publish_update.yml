@@ -54,7 +54,7 @@ on:
 
 jobs:
   sonarcloud:
-    if: ${{ (inputs.TYPE == 'preview') || (inputs.TYPE == 'release')}}
+    if: ${{ (inputs.TYPE == 'preview') }}
     name: SonarCloud
     runs-on: ubuntu-latest
     steps:
