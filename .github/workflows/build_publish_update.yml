@@ -13,9 +13,7 @@ on:
         type: string
       TYPE:
         # Values:
-        # preview
-        # release
-        # production
+        # [ preview | release | production ]
         required: true
         type: string
       REPO:
@@ -33,8 +31,7 @@ on:
         type: string
       SERVICE_TYPE:
         # Types:
-        # cloud_run
-        # mig
+        # [ cloud_run | mig ]
         type: string
         default: 'cloud_run'
       REACT_APP_STAGE:
@@ -71,14 +68,18 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
   build-and-push:
     runs-on: ubuntu-latest
-
-    # VARIABLES IN IMAGE NAME
     env:
       IMAGE_PATH: ${{ secrets.GCP_PROJECT_ID }}/${{ inputs.SERVICE_NAME }}
       BRANCH_NAME: ${{ inputs.BRANCH_NAME }}
       PR_NUMBER: ${{ inputs.PR_NUMBER }}
       STAGE: ${{ inputs.REACT_APP_STAGE }}
+
     steps:
+
+      # ------------------------------------------------
+      # JOB START NOTIFICATION -------------------------
+      # ------------------------------------------------
+
       - name: Starting notification
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
@@ -94,32 +95,46 @@ jobs:
             Type: *${{ inputs.TYPE }}*
 
             ----------------------------------------------
-      # CHECKOUT
+
+      # ------------------------------------------------
+      # CHECKOUT ---------------------------------------
+      # ------------------------------------------------
+
       - name: Checkout
         uses: DeviantsFactions/checkout@v2
-      # SET DYNAMIC VARS
-      ##  IMAGE_NAME_HASH
+
+      # ------------------------------------------------
+      # IMAGE NAME BUILDER -----------------------------
+      # ------------------------------------------------
+
+      #  USING COMMIT HASH
       - name: Set image name with commit hash
         shell: bash
         run: |-
           echo IMAGE_NAME_HASH=us.gcr.io/$IMAGE_PATH:$GITHUB_SHA >> $GITHUB_ENV
       - run: echo $IMAGE_NAME_HASH
-      ##  TARGET IMAGE FROM BRANCH
+
+      #  USING BRANCH NAME
       - name: Set image name with branch name
         if: ${{ (inputs.TYPE != 'preview') }}
         shell: bash
         run: |-
           echo TARGET_IMAGE_NAME=us.gcr.io/$IMAGE_PATH:$BRANCH_NAME >> $GITHUB_ENV
-      ##  TARGET IMAGE FROM PR
+
+      #  USING PULL REQUEST NUMBER
       - name: Set image name with PR number
         if: ${{ (inputs.TYPE == 'preview') }}
         shell: bash
         run: |-
           echo TARGET_IMAGE_NAME=us.gcr.io/$IMAGE_PATH:pr-$PR_NUMBER >> $GITHUB_ENV
-      ### CHECK
+
+      # SHOW TARGET IMAGE NAME CONFIRMATION
       - run: echo $TARGET_IMAGE_NAME
 
-      # SET PROVIDERS
+      # ------------------------------------------------
+      # PROVIDERS INITIALIZERS -------------------------
+      # ------------------------------------------------
+
       ##  NODE
       - uses: DeviantsFactions/setup-node@v2
         with:
@@ -133,16 +148,20 @@ jobs:
       - name: Set up Cloud SDK
         uses: DeviantsFactions/setup-gcloud@v0.3.0
 
+      # ------------------------------------------------
+      # PROJECT TESTS AND CHECKS ZONE ------------------
+      # ------------------------------------------------
+
       # INSTALL DEPENDENCIES
-      ##  NODE
       # - run: npm install
 
       # RUN TESTS
-      ##  NODE
       # - run: npm test
 
-      # BUILD
-      ##  BUILD ARTIFACT
+      # ------------------------------------------------
+      # DOCKER BUILD -----------------------------------
+      # ------------------------------------------------
+
       - name: Docker build with branch name
         run: |-
           docker build --no-cache \
@@ -151,23 +170,30 @@ jobs:
           --build-arg REACT_APP_STAGE=$STAGE \
           . -f Dockerfile
 
-      ##  REGISTRY AUTH (GCR)
+      # ------------------------------------------------
+      # DOCKER PUSH ------------------------------------
+      # ------------------------------------------------
+
+      #  REGISTRY AUTH (GCR)
       - run: |
           gcloud auth configure-docker -q
-      ##  PUSH
+      #  PUSH
       - name: Docker push with branch name
         run: |-
           docker push $TARGET_IMAGE_NAME
           docker push $IMAGE_NAME_HASH
 
-      # DEPLOY Google Cloud Run
-      ## Withouth revision suffix
+      # ------------------------------------------------
+      # CLOUD RUN DEPLOY -------------------------------
+      # ------------------------------------------------
+
+      # Withouth revision suffix
       - uses: 'DeviantsFactions/deploy-cloudrun@v0.6.0'
         if: ${{ (inputs.TYPE != 'preview') && (inputs.SERVICE_TYPE == 'cloud_run') }}
         with:
           service: ${{ inputs.GCRUN_SERVICE_NAME }}
           image: ${{ env.TARGET_IMAGE_NAME }}
-      ## With revision
+      # With revision
       - uses: 'DeviantsFactions/deploy-cloudrun@v0.6.0'
         if: ${{ (inputs.TYPE == 'preview') && (inputs.SERVICE_TYPE == 'cloud_run') }}
         with:
@@ -175,14 +201,19 @@ jobs:
           image: ${{ env.TARGET_IMAGE_NAME }}
           tag: ${{ inputs.TAG_PREFIX }}-preview-${{ inputs.PR_NUMBER }}
           suffix: -${{ inputs.PR_NUMBER }}
-          # To do: LB logic
 
-      # DEPLOY mig
+      # ------------------------------------------------
+      # MIG DEPLOY -------------------------------------
+      # ------------------------------------------------
+
       - name: 'Update mig (Events handler)'
         if: ${{ (inputs.SERVICE_TYPE == 'mig') }}
         run: 'gcloud compute instance-groups managed rolling-action replace --region us-central1 events-mig'
 
-      # RESULTS:
+      # ------------------------------------------------
+      # RESULT NOTIFICATIONS ---------------------------
+      # ------------------------------------------------
+
       # Success
       - name: Success notification
         env:
@@ -198,6 +229,7 @@ jobs:
             Type: *${{ inputs.TYPE }}*
 
             ----------------------------------------------
+
       # Failure
       - name: Failure notification
         if: ${{ failure() }}
