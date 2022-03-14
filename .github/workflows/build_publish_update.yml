@@ -8,6 +8,10 @@ on:
         type: string
       BRANCH_NAME:
         type: string
+      NOTIFICATIONS_ENABLED:
+        type: boolean
+        required: false
+        default: true
       GCRUN_SERVICE_NAME:
         required: true
         type: string
@@ -58,7 +62,7 @@ on:
 
 jobs:
   sonarcloud:
-    if: ${{ (inputs.TYPE == 'preview') || (inputs.RUN_SONAR) }}
+    if: ${{ ((inputs.TYPE == 'preview') || (inputs.RUN_SONAR)) && inputs.NOTIFICATIONS_ENABLED }}
     name: SonarCloud
     runs-on: ubuntu-latest
     steps:
@@ -240,6 +244,7 @@ jobs:
 
       # Success
       - name: Success notification
+        if: ${{ inputs.NOTIFICATIONS_ENABLED }}
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         uses: Ilshidur/action-discord@master
@@ -256,7 +261,7 @@ jobs:
 
       # Failure
       - name: Failure notification
-        if: ${{ failure() }}
+        if: ${{ failure() && inputs.NOTIFICATIONS_ENABLED }}
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         uses: Ilshidur/action-discord@master
