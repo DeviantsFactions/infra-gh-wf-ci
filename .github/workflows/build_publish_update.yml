@@ -3,30 +3,33 @@ name: Build, Publish and Update
 on:
   workflow_call:
     inputs:
-      SERVICE_NAME:
-        required: true
-        type: string
-      TAG_PREFIX:
-        type: string
-      GCRUN_SERVICE_NAME:
-        required: true
-        type: string
-      TYPE:
-        # Values:
-        # [ preview | release | production ]
-        required: true
-        type: string
-      REPO:
+      ACTOR:
         required: true
         type: string
       BRANCH_NAME:
         type: string
-      PR_NUMBER:
-        type: number
-      ACTOR:
+      GCRUN_SERVICE_NAME:
         required: true
         type: string
       GH_RUN_NUMBER:
+        required: true
+        type: string
+      MIG_VERSION:
+        required: false
+        type: string
+        default: 'a'
+      PR_NUMBER:
+        type: number
+      REACT_APP_STAGE:
+        type: string
+        default: ''
+      REPO:
+        required: true
+        type: string
+      RUN_SONAR:
+        type: boolean
+        default: false
+      SERVICE_NAME:
         required: true
         type: string
       SERVICE_TYPE:
@@ -34,18 +37,19 @@ on:
         # [ cloud_run | mig ]
         type: string
         default: 'cloud_run'
-      REACT_APP_STAGE:
+      TAG_PREFIX:
         type: string
-        default: ''
-      RUN_SONAR:
-        type: boolean
-        default: false
+      TYPE:
+        # Values:
+        # [ preview | release | production ]
+        required: true
+        type: string
     secrets:
+      DISCORD_WEBHOOK:
+        required: true
       GCP_PROJECT_ID:
         required: true
       GCP_SA_GH_KEY:
-        required: true
-      DISCORD_WEBHOOK:
         required: true
       GH_TOKEN:
         required: true
@@ -206,9 +210,29 @@ jobs:
       # MIG DEPLOY -------------------------------------
       # ------------------------------------------------
 
-      - name: 'Update mig (Events handler)'
+      # rutas siempre existen
+      # && => sale mig de tf
+
+      # Set config vars
+      - name: Set events-mig name
         if: ${{ (inputs.SERVICE_TYPE == 'mig') }}
-        run: 'gcloud compute instance-groups managed rolling-action replace --region us-central1 events-mig'
+        shell: bash
+        run: |-
+          echo MIG_NAME=events-mig-$MIG_VERSION >> $GITHUB_ENV
+      - name: Set events-mig count
+        if: ${{ (inputs.SERVICE_TYPE == 'mig') }}
+        shell: bash
+        run: |-
+          echo MIG_COUNT=$(gcloud compute instance-groups managed list | grep $MIG_NAME -o -i | wc -l) >> $GITHUB_ENV
+      
+      # SHOW VARS VALUE CONFIRMATION
+      - run: echo $MIG_NAME
+      - run: echo $MIG_COUNT
+      
+      # Update TARGET MIG
+      - name: 'Update MIG'
+        if: ${{ (inputs.SERVICE_TYPE == 'mig') && ( $MIG_COUNT != 0 ) }}
+        run: 'gcloud compute instance-groups managed rolling-action replace --region us-central1 $MIG_NAME'
 
       # ------------------------------------------------
       # RESULT NOTIFICATIONS ---------------------------
