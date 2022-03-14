@@ -222,7 +222,7 @@ jobs:
         if: ${{ (inputs.SERVICE_TYPE == 'mig') }}
         shell: bash
         run: |-
-          echo MIG_NAME=events-mig-$MIG_VERSION >> $GITHUB_ENV
+          echo MIG_NAME=events-$MIG_VERSION-mig >> $GITHUB_ENV
       - name: Set events-mig count
         if: ${{ (inputs.SERVICE_TYPE == 'mig') }}
         shell: bash
