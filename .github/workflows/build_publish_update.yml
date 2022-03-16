@@ -236,7 +236,7 @@ jobs:
       # Update TARGET MIG
       - name: 'Update MIG'
         if: ${{ (inputs.SERVICE_TYPE == 'mig') }}
-        run: 'gcloud compute instance-groups managed rolling-action replace --region us-central1 events-mig'
+        run: 'gcloud compute instance-groups managed rolling-action replace --region us-central1 $MIG_NAME'
 
       # ------------------------------------------------
       # RESULT NOTIFICATIONS ---------------------------
