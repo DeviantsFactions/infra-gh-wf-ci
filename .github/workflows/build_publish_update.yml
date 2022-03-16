@@ -77,8 +77,9 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
     env:
-      IMAGE_PATH: ${{ secrets.GCP_PROJECT_ID }}/${{ inputs.SERVICE_NAME }}
       BRANCH_NAME: ${{ inputs.BRANCH_NAME }}
+      IMAGE_PATH: ${{ secrets.GCP_PROJECT_ID }}/${{ inputs.SERVICE_NAME }}
+      MIG_NAME: events-${{ inputs.MIG_VERSION }}-mig
       PR_NUMBER: ${{ inputs.PR_NUMBER }}
       STAGE: ${{ inputs.REACT_APP_STAGE }}
 
@@ -218,11 +219,11 @@ jobs:
       # && => sale mig de tf
 
       # Set config vars
-      - name: Set events-mig name
-        if: ${{ (inputs.SERVICE_TYPE == 'mig') }}
-        shell: bash
-        run: |-
-          echo MIG_NAME=events-$MIG_VERSION-mig >> $GITHUB_ENV
+      # - name: Set events-mig name
+      #   if: ${{ (inputs.SERVICE_TYPE == 'mig') }}
+      #   shell: bash
+      #   run: |-
+      #     echo MIG_NAME=events-$MIG_VERSION-mig >> $GITHUB_ENV
       - name: Set events-mig count
         if: ${{ (inputs.SERVICE_TYPE == 'mig') }}
         shell: bash
