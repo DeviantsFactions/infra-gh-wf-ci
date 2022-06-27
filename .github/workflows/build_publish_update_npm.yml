@@ -174,10 +174,8 @@ jobs:
       # ------------------------------------------------
       - name: Set .npmrc file with token 
         run: |-
-          echo "registry=https://npm.pkg.github.com/deviantsfactions" > .npmrc
-          echo "@deviantsfactions:registry=https://npm.pkg.github.com/" >> .npmrc 
+          echo "@deviantsfactions:registry=https://npm.pkg.github.com/" > .npmrc 
           echo "//npm.pkg.github.com/:_authToken=${{ secrets.NPM_TOKEN }}" >> .npmrc
-          echo "//npm.pkg.github.com/deviantsfactions/:_authToken=${{ secrets.NPM_TOKEN }}" >> .npmrc
           echo "always-auth=true" >> .npmrc
 
       # ------------------------------------------------
