@@ -177,7 +177,7 @@ jobs:
           echo '@deviantsfactions:registry=https://npm.pkg.github.com/' > ${{ github.workspace }}/.npmrc
           echo '//npm.pkg.github.com/:_authToken=${{ secrets.NPM_TOKEN }}' >> ${{ github.workspace }}/.npmrc
           echo 'always-auth=true' >> ${{ github.workspace }}/.npmrc
-          ls -l ${{ github.workspace }}
+          ls -la ${{ github.workspace }}
 
       # ------------------------------------------------
       # DOCKER BUILD -----------------------------------
