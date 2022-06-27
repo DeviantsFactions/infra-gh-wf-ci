@@ -172,10 +172,12 @@ jobs:
       # ------------------------------------------------
       # SET NPMRC FILE ---------------------------------
       # ------------------------------------------------
-      - name: Use .npmrc
-        uses: bduff9/use-npmrc@v1.1
-        with:
-          dot-npmrc: ${{ secrets.NPM_TOKEN }}
+      - name: Set .npmrc file with token 
+        run: |-
+          echo '@deviantsfactions:registry=https://npm.pkg.github.com/' > ${{ github.workspace }}/.npmrc
+          echo '//npm.pkg.github.com/:_authToken=${{ secrets.NPM_TOKEN }}' >> ${{ github.workspace }}/.npmrc
+          echo 'always-auth=true' >> ${{ github.workspace }}/.npmrc
+          ls -l
 
       # ------------------------------------------------
       # DOCKER BUILD -----------------------------------
