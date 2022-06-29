@@ -95,8 +95,7 @@ jobs:
 
       # Run the "semgrep ci" command on the command line of the docker image.
       - run: |-
-          uname -a
-          ls /etc
+          apk add curl
           echo "SEMGREP_APP_TOKEN=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token  ${{ secrets.GH_TOKEN }}" https://api.github.com/orgs/DeviantsFactions/actions/secrets/SEMGREP_APP_TOKEN)" >> $GITHUB_ENV
           semgrep ci
         env:
