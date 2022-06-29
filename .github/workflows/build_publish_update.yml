@@ -95,8 +95,8 @@ jobs:
       - run: |-
           apk add curl
           curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token  ${{ secrets.GH_TOKEN }}" https://api.github.com/orgs/DeviantsFactions/actions/secrets/SEMGREP_APP_TOKEN > token.text
-          echo "SEMGREP_APP_TOKEN=$(cat token.text)" >> $GITHUB_ENV
-          semgrep ci
+          cat token.text
+          # semgrep ci
         env:
           # Select rules for your scan with one of these two options.
           # Option 1: Scan with rules set in Semgrep App's rule board
