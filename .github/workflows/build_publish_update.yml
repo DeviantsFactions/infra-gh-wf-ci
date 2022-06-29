@@ -78,10 +78,8 @@ jobs:
     name: Semgrep Scan
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - name: Semgrep Scan
-      uses: DeviantsFactions/infra-gh-wf-ci/.github/workflows/semgrep.yml@main
-
+    - uses: DeviantsFactions/infra-gh-wf-ci/.github/workflows/semgrep.yml@main
+    
   build-and-push:
     runs-on: ubuntu-latest
     env:
