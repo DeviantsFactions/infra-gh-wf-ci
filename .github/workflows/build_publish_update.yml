@@ -64,7 +64,8 @@ on:
 
 jobs:
   sonarcloud:
-    if: ${{ ((inputs.TYPE == 'preview') || (inputs.RUN_SONAR)) && inputs.NOTIFICATIONS_ENABLED }}
+    if: ${{ inputs.RUN_SONAR && inputs.NOTIFICATIONS_ENABLED }}
+    #if: ${{ ((inputs.TYPE == 'preview') || (inputs.RUN_SONAR)) && inputs.NOTIFICATIONS_ENABLED }}
     name: SonarCloud
     runs-on: ubuntu-latest
     steps:
