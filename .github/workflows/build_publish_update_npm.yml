@@ -94,7 +94,7 @@ jobs:
       - uses: actions/checkout@v3
 
       # Run the "semgrep ci" command on the command line of the docker image.
-      - run: semgrep ci
+      - run: semgrep ci --error --severity ERROR
         env:
           # Select rules for your scan with one of these two options.
           # Option 1: Scan with rules set in Semgrep App's rule board
