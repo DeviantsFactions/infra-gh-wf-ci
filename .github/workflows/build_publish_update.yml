@@ -103,6 +103,7 @@ jobs:
           # SEMGREP_RULES: p/default # more at semgrep.dev/explore
 
   build-and-push:
+    needs: semgrep
     runs-on: ubuntu-latest
     env:
       BRANCH_NAME: ${{ inputs.BRANCH_NAME }}
