@@ -64,6 +64,7 @@ on:
 
 jobs:
   sonarcloud:
+    if: github.ref == 'refs/heads/main'
     if: ${{ ((inputs.TYPE == 'preview') || (inputs.RUN_SONAR)) && inputs.NOTIFICATIONS_ENABLED }}
     name: SonarCloud
     runs-on: ubuntu-latest
