@@ -66,31 +66,14 @@ jobs:
   build-and-push:
     needs: semgrep
     runs-on: ubuntu-latest
-    env:
-      BRANCH_NAME: ${{ inputs.BRANCH_NAME }}
-      IMAGE_PATH: ${{ secrets.GCP_PROJECT_ID }}/${{ inputs.SERVICE_NAME }}
-      MIG_NAME: events-${{ inputs.MIG_VERSION }}-mig
-      PR_NUMBER: ${{ inputs.PR_NUMBER }}
-      STAGE: ${{ inputs.REACT_APP_STAGE }}
 
     steps:
-
-      # ------------------------------------------------
-      # JOB START NOTIFICATION -------------------------
-      # ------------------------------------------------
-
       - name: Starting notification
         env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          DISCORD_WEBHOOK: aaa
         uses: Ilshidur/action-discord@master
         with:
           args: |
-            
             ----------------------------------------------
-
-            *${{ inputs.ACTOR }}* started:
-            **${{ inputs.SERVICE_NAME }}** build *${{ inputs.GH_RUN_NUMBER }}*.
-            URL: https://github.com/DeviantsFactions/${{ inputs.REPO }}/actions
-            Type: *${{ inputs.TYPE }}*
-
+            test
             ----------------------------------------------
