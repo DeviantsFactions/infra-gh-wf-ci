@@ -66,7 +66,7 @@ jobs:
   sonarcloud:
     if: ${{ ((github.ref == 'refs/heads/main') && ((inputs.TYPE == 'preview') || (inputs.RUN_SONAR)) && inputs.NOTIFICATIONS_ENABLED) }}
     name: SonarCloud
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04-32core
     steps:
       - uses: actions/checkout@v2
         with:
@@ -81,7 +81,7 @@ jobs:
     name: Semgrep Scan
     # Only change the if you are self-hosting. See also:
     # https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job#choosing-self-hosted-runners
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04-32core
     container:
       # A Docker image with Semgrep installed. Don't change this.
       image: returntocorp/semgrep
@@ -104,7 +104,7 @@ jobs:
 
   build-and-push:
     needs: semgrep
-    runs-on: ubuntu-20.04-16core
+    runs-on: ubuntu-20.04-32core
     env:
       BRANCH_NAME: ${{ inputs.BRANCH_NAME }}
       IMAGE_PATH: ${{ secrets.GCP_PROJECT_ID }}/${{ inputs.SERVICE_NAME }}
