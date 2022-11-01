@@ -1,4 +1,4 @@
-name: Build, Publish and Update
+name: Build
 
 on:
   workflow_call:
