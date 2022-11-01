@@ -67,7 +67,10 @@ jobs:
     runs-on: ubuntu-latest
     env:
       BRANCH_NAME: ${{ inputs.BRANCH_NAME }}
-      
+      IMAGE_PATH: ${{ secrets.GCP_PROJECT_ID }}/${{ inputs.SERVICE_NAME }}
+      MIG_NAME: events-${{ inputs.MIG_VERSION }}-mig
+      PR_NUMBER: ${{ inputs.PR_NUMBER }}
+      STAGE: ${{ inputs.REACT_APP_STAGE }}
     steps:
       - name: Starting notification
         env:
