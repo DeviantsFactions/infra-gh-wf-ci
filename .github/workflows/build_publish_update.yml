@@ -6,9 +6,6 @@ on:
       ACTOR:
         required: true
         type: string
-      RUN-NAME:
-        required: true
-        type: string
       BRANCH_NAME:
         type: string
       NOTIFICATIONS_ENABLED:
