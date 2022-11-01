@@ -65,45 +65,6 @@ on:
         required: false
 
 jobs:
-  sonarcloud:
-    if: ${{ ((github.ref == 'refs/heads/main') && ((inputs.TYPE == 'preview') || (inputs.RUN_SONAR)) && inputs.NOTIFICATIONS_ENABLED) }}
-    name: SonarCloud
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-      - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}  # Needed to get PR information, if any
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-  semgrep:
-    # User definable name of this GitHub Actions job.
-    name: Semgrep Scan
-    # Only change the if you are self-hosting. See also:
-    # https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job#choosing-self-hosted-runners
-    runs-on: ubuntu-latest
-    container:
-      # A Docker image with Semgrep installed. Don't change this.
-      image: returntocorp/semgrep
-    # Skip any PR created by dependabot to avoid permission issues
-    if: (github.actor != 'dependabot[bot]')
-    steps:
-      # Fetch project source with GitHub Actions Checkout.
-      - uses: actions/checkout@v3
-
-      # Run the "semgrep ci" command on the command line of the docker image.
-      - run: semgrep ci || [ $? != 1 ]
-        env:
-          # Select rules for your scan with one of these two options.
-          # Option 1: Scan with rules set in Semgrep App's rule board
-          # Make a token at semgrep.dev/orgs/-/settings/tokens, and then
-          # save it in your GitHub Secrets.
-          SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
-          # Option 2: Set hard-coded rulesets, viewable in logs.
-          # SEMGREP_RULES: p/default # more at semgrep.dev/explore
-
   build-and-push:
     needs: semgrep
     runs-on: ubuntu-latest
@@ -115,31 +76,6 @@ jobs:
       STAGE: ${{ inputs.REACT_APP_STAGE }}
 
     steps:
-
-      # ------------------------------------------------
-      # JOB START NOTIFICATION -------------------------
-      # ------------------------------------------------
-
-      - name: Starting notification
-        env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-        uses: Ilshidur/action-discord@master
-        with:
-          args: |
-            
-            ----------------------------------------------
-
-            *${{ inputs.ACTOR }}* started:
-            **${{ inputs.SERVICE_NAME }}** build *${{ inputs.GH_RUN_NUMBER }}*.
-            URL: https://github.com/DeviantsFactions/${{ inputs.REPO }}/actions
-            Type: *${{ inputs.TYPE }}*
-
-            ----------------------------------------------
-
-      # ------------------------------------------------
-      # CHECKOUT ---------------------------------------
-      # ------------------------------------------------
-
       - name: Checkout
         uses: DeviantsFactions/checkout@v2
 
@@ -251,70 +187,3 @@ jobs:
           image: ${{ env.TARGET_IMAGE_NAME }}
           tag: ${{ inputs.TAG_PREFIX }}-preview-${{ inputs.PR_NUMBER }}
           suffix: -${{ inputs.PR_NUMBER }}
-
-      # ------------------------------------------------
-      # MIG DEPLOY -------------------------------------
-      # ------------------------------------------------
-
-      # rutas siempre existen
-      # && => sale mig de tf
-
-      # Set config vars
-      - name: Set events-mig count
-        if: ${{ (inputs.SERVICE_TYPE == 'mig') }}
-        shell: bash
-        run: |-
-          echo MIG_COUNT=$(gcloud compute instance-groups managed list | grep $MIG_NAME -o -i | wc -l) >> $GITHUB_ENV
-      
-      # SHOW VARS VALUE CONFIRMATION
-      - run: echo $MIG_NAME
-      - run: echo $MIG_COUNT
-      
-      # Update TARGET MIG
-      - name: 'Update MIG'
-        if: ${{ (inputs.SERVICE_TYPE == 'mig') && ( env.MIG_COUNT != 0 ) }}
-        run: 'gcloud compute instance-groups managed rolling-action replace --region us-central1 $MIG_NAME'
-
-      # Update OLD MIG
-      - name: 'Update MIG'
-        if: ${{ (inputs.SERVICE_TYPE == 'mig') && (env.MIG_COUNT == 0)}}
-        run: 'gcloud compute instance-groups managed rolling-action replace --region us-central1 events-mig'
-
-      # ------------------------------------------------
-      # RESULT NOTIFICATIONS ---------------------------
-      # ------------------------------------------------
-
-      # Success
-      - name: Success notification
-        if: ${{ inputs.NOTIFICATIONS_ENABLED }}
-        env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-        uses: Ilshidur/action-discord@master
-        with:
-          args: |
-            
-            ----------------------------------------------
-
-            Success
-            **${{ inputs.SERVICE_NAME }}** build *${{ inputs.GH_RUN_NUMBER }}*.
-            Type: *${{ inputs.TYPE }}*
-
-            ----------------------------------------------
-
-      # Failure
-      - name: Failure notification
-        if: ${{ failure() && inputs.NOTIFICATIONS_ENABLED }}
-        env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-        uses: Ilshidur/action-discord@master
-        with:
-          args: |
-            
-            ----------------------------------------------
-
-            Failed
-            **${{ inputs.SERVICE_NAME }}** build *${{ inputs.GH_RUN_NUMBER }}*.
-            Type: *${{ inputs.TYPE }}*
-            Repo: https://github.com/DeviantsFactions/${{ inputs.REPO }}/actions
-
-            ----------------------------------------------
