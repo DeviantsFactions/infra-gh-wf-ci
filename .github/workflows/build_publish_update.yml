@@ -87,9 +87,6 @@ jobs:
             
             ----------------------------------------------
 
-            *${{ inputs.ACTOR }}* started:
-            **${{ inputs.SERVICE_NAME }}** build *${{ inputs.GH_RUN_NUMBER }}*.
-            URL: https://github.com/DeviantsFactions/${{ inputs.REPO }}/actions
-            Type: *${{ inputs.TYPE }}*
+            hola
 
             ----------------------------------------------
