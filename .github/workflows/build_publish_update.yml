@@ -126,7 +126,7 @@ jobs:
           args: |
             ----------------------------------------------
 
-            *${{ inputs.ACTOR }}* started:
+            🚀 *${{ inputs.ACTOR }}* started:
             **${{ inputs.SERVICE_NAME }}** build *${{ inputs.GH_RUN_NUMBER }}*.
             URL: https://github.com/DeviantsFactions/${{ inputs.REPO }}/actions
             Type: *${{ inputs.TYPE }}*
@@ -281,7 +281,7 @@ jobs:
           args: |
             ----------------------------------------------
 
-            Success
+            🚀 Success!
             **${{ inputs.SERVICE_NAME }}** build *${{ inputs.GH_RUN_NUMBER }}*.
             Type: *${{ inputs.TYPE }}*
 
@@ -297,7 +297,7 @@ jobs:
           args: |
             ----------------------------------------------
 
-            Failed
+            💀 Failed
             **${{ inputs.SERVICE_NAME }}** build *${{ inputs.GH_RUN_NUMBER }}*.
             Type: *${{ inputs.TYPE }}*
             Repo: https://github.com/DeviantsFactions/${{ inputs.REPO }}/actions
