@@ -289,7 +289,7 @@ jobs:
         uses: Ilshidur/action-discord@master
         with:
           args: |
-            💀 Failed
+            💩 Failed
             **${{ inputs.SERVICE_NAME }}** build *${{ inputs.GH_RUN_NUMBER }}*.
             Environment: *${{ inputs.TYPE }}*
             Repo: https://github.com/DeviantsFactions/${{ inputs.REPO }}/actions
