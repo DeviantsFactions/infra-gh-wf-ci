@@ -64,7 +64,6 @@ on:
 
 jobs:
   build-and-push:
-    needs: semgrep
     runs-on: ubuntu-latest
 
     steps:
