@@ -1,0 +1,320 @@
+name: Build, Publish and Update
+
+on:
+  workflow_call:
+    inputs:
+      ACTOR:
+        required: true
+        type: string
+      BRANCH_NAME:
+        type: string
+      NOTIFICATIONS_ENABLED:
+        type: boolean
+        required: false
+        default: true
+      GCRUN_SERVICE_NAME:
+        required: true
+        type: string
+      GH_RUN_NUMBER:
+        required: true
+        type: string
+      MIG_VERSION:
+        required: false
+        type: string
+        default: 'a'
+      PR_NUMBER:
+        type: number
+      REACT_APP_STAGE:
+        type: string
+        default: ''
+      REPO:
+        required: true
+        type: string
+      RUN_SONAR:
+        type: boolean
+        default: true
+      SERVICE_NAME:
+        required: true
+        type: string
+      SERVICE_TYPE:
+        # Types:
+        # [ cloud_run | mig ]
+        type: string
+        default: 'cloud_run'
+      TAG_PREFIX:
+        type: string
+      TYPE:
+        # Values:
+        # [ preview | release | production ]
+        required: true
+        type: string
+    secrets:
+      DISCORD_WEBHOOK:
+        required: true
+      GCP_PROJECT_ID:
+        required: true
+      GCP_SA_GH_KEY:
+        required: true
+      GH_TOKEN:
+        required: true
+      SONAR_TOKEN:
+        required: true
+      NPM_TOKEN:
+        required: true
+      SEMGREP_APP_TOKEN:
+        required: false
+
+jobs:
+  sonarcloud:
+    if: ${{ ((github.ref == 'refs/heads/main') && ((inputs.TYPE == 'preview') || (inputs.RUN_SONAR)) && inputs.NOTIFICATIONS_ENABLED) }}
+    name: SonarCloud
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}  # Needed to get PR information, if any
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+  semgrep:
+    # User definable name of this GitHub Actions job.
+    name: Semgrep Scan
+    # Only change the if you are self-hosting. See also:
+    # https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job#choosing-self-hosted-runners
+    runs-on: ubuntu-latest
+    container:
+      # A Docker image with Semgrep installed. Don't change this.
+      image: returntocorp/semgrep
+    # Skip any PR created by dependabot to avoid permission issues
+    if: (github.actor != 'dependabot[bot]')
+    steps:
+      # Fetch project source with GitHub Actions Checkout.
+      - uses: actions/checkout@v3
+
+      # Run the "semgrep ci" command on the command line of the docker image.
+      - run: semgrep ci || [ $? != 1 ]
+        env:
+          # Select rules for your scan with one of these two options.
+          # Option 1: Scan with rules set in Semgrep App's rule board
+          # Make a token at semgrep.dev/orgs/-/settings/tokens, and then
+          # save it in your GitHub Secrets.
+          SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+          # Option 2: Set hard-coded rulesets, viewable in logs.
+          # SEMGREP_RULES: p/default # more at semgrep.dev/explore
+
+  build-and-push:
+    needs: semgrep
+    runs-on: ubuntu-latest
+    env:
+      BRANCH_NAME: ${{ inputs.BRANCH_NAME }}
+      IMAGE_PATH: ${{ secrets.GCP_PROJECT_ID }}/${{ inputs.SERVICE_NAME }}
+      MIG_NAME: events-${{ inputs.MIG_VERSION }}-mig
+      PR_NUMBER: ${{ inputs.PR_NUMBER }}
+      STAGE: ${{ inputs.REACT_APP_STAGE }}
+
+    steps:
+
+      # ------------------------------------------------
+      # JOB START NOTIFICATION -------------------------
+      # ------------------------------------------------
+
+      - name: Starting notification
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        uses: Ilshidur/action-discord@master
+        with:
+          args: |
+            
+            ----------------------------------------------
+
+            *${{ inputs.ACTOR }}* started:
+            **${{ inputs.SERVICE_NAME }}** build *${{ inputs.GH_RUN_NUMBER }}*.
+            URL: https://github.com/DeviantsFactions/${{ inputs.REPO }}/actions
+            Type: *${{ inputs.TYPE }}*
+
+            ----------------------------------------------
+
+      # ------------------------------------------------
+      # CHECKOUT ---------------------------------------
+      # ------------------------------------------------
+
+      - name: Checkout
+        uses: DeviantsFactions/checkout@v2
+
+      # ------------------------------------------------
+      # IMAGE NAME BUILDER -----------------------------
+      # ------------------------------------------------
+
+      #  USING COMMIT HASH
+      - name: Set image name with commit hash
+        shell: bash
+        run: |-
+          echo IMAGE_NAME_HASH=us.gcr.io/$IMAGE_PATH:$GITHUB_SHA >> $GITHUB_ENV
+      - run: echo $IMAGE_NAME_HASH
+
+      #  USING BRANCH NAME
+      - name: Set image name with branch name
+        if: ${{ (inputs.TYPE != 'preview') }}
+        shell: bash
+        run: |-
+          echo TARGET_IMAGE_NAME=us.gcr.io/$IMAGE_PATH:$BRANCH_NAME >> $GITHUB_ENV
+
+      #  USING PULL REQUEST NUMBER
+      - name: Set image name with PR number
+        if: ${{ (inputs.TYPE == 'preview') }}
+        shell: bash
+        run: |-
+          echo TARGET_IMAGE_NAME=us.gcr.io/$IMAGE_PATH:pr-$PR_NUMBER >> $GITHUB_ENV
+
+      # SHOW TARGET IMAGE NAME CONFIRMATION
+      - run: echo $TARGET_IMAGE_NAME
+
+      # ------------------------------------------------
+      # PROVIDERS INITIALIZERS -------------------------
+      # ------------------------------------------------
+
+      ##  NODE
+      - uses: DeviantsFactions/setup-node@v2
+        with:
+          node-version: '16.13.0'
+      ##  GCP AUTH
+      - id: gcp-auth
+        uses: DeviantsFactions/auth@v0
+        with:
+          credentials_json: ${{ secrets.GCP_SA_GH_KEY }}
+      ##  GCP SDK
+      - name: Set up Cloud SDK
+        uses: DeviantsFactions/setup-gcloud@v0.3.0
+
+      # ------------------------------------------------
+      # PROJECT TESTS AND CHECKS ZONE ------------------
+      # ------------------------------------------------
+
+      # INSTALL DEPENDENCIES
+      # - run: npm install
+
+      # RUN TESTS
+      # - run: npm test
+
+      # ------------------------------------------------
+      # SET NPMRC FILE ---------------------------------
+      # ------------------------------------------------
+      - name: Set .npmrc file with token 
+        run: |
+          echo '@deviantsfactions:registry=https://npm.pkg.github.com/' > ${{ github.workspace }}/.npmrc
+          echo '//npm.pkg.github.com/:_authToken=${{ secrets.NPM_TOKEN }}' >> ${{ github.workspace }}/.npmrc
+          echo 'always-auth=true' >> ${{ github.workspace }}/.npmrc
+          ls -la ${{ github.workspace }}
+
+      # ------------------------------------------------
+      # DOCKER BUILD -----------------------------------
+      # ------------------------------------------------
+
+      - name: Docker build with branch name
+        run: |-
+          docker build --no-cache \
+          -t $TARGET_IMAGE_NAME \
+          -t $IMAGE_NAME_HASH \
+          --build-arg REACT_APP_STAGE=$STAGE \
+          . -f Dockerfile
+
+      # ------------------------------------------------
+      # DOCKER PUSH ------------------------------------
+      # ------------------------------------------------
+
+      #  REGISTRY AUTH (GCR)
+      - run: |
+          gcloud auth configure-docker -q
+      #  PUSH
+      - name: Docker push with branch name
+        run: |-
+          docker push $TARGET_IMAGE_NAME
+          docker push $IMAGE_NAME_HASH
+
+      # ------------------------------------------------
+      # CLOUD RUN DEPLOY -------------------------------
+      # ------------------------------------------------
+
+      # Withouth revision suffix
+      - uses: 'DeviantsFactions/deploy-cloudrun@v0.6.0'
+        if: ${{ (inputs.TYPE != 'preview') && (inputs.SERVICE_TYPE == 'cloud_run') }}
+        with:
+          service: ${{ inputs.GCRUN_SERVICE_NAME }}
+          image: ${{ env.TARGET_IMAGE_NAME }}
+      # With revision
+      - uses: 'DeviantsFactions/deploy-cloudrun@v0.6.0'
+        if: ${{ (inputs.TYPE == 'preview') && (inputs.SERVICE_TYPE == 'cloud_run') }}
+        with:
+          service: ${{ inputs.GCRUN_SERVICE_NAME }}
+          image: ${{ env.TARGET_IMAGE_NAME }}
+          tag: ${{ inputs.TAG_PREFIX }}-preview-${{ inputs.PR_NUMBER }}
+          suffix: -${{ inputs.PR_NUMBER }}
+
+      # ------------------------------------------------
+      # MIG DEPLOY -------------------------------------
+      # ------------------------------------------------
+
+      # rutas siempre existen
+      # && => sale mig de tf
+
+      # Set config vars
+      - name: Set events-mig count
+        if: ${{ (inputs.SERVICE_TYPE == 'mig') }}
+        shell: bash
+        run: |-
+          echo MIG_COUNT=$(gcloud compute instance-groups managed list | grep $MIG_NAME -o -i | wc -l) >> $GITHUB_ENV
+      
+      # SHOW VARS VALUE CONFIRMATION
+      - run: echo $MIG_NAME
+      - run: echo $MIG_COUNT
+      
+      # Update TARGET MIG
+      - name: 'Update MIG'
+        if: ${{ (inputs.SERVICE_TYPE == 'mig') && ( env.MIG_COUNT != 0 ) }}
+        run: 'gcloud compute instance-groups managed rolling-action replace --region us-central1 $MIG_NAME'
+
+      # Update OLD MIG
+      - name: 'Update MIG'
+        if: ${{ (inputs.SERVICE_TYPE == 'mig') && (env.MIG_COUNT == 0)}}
+        run: 'gcloud compute instance-groups managed rolling-action replace --region us-central1 events-mig'
+
+      # ------------------------------------------------
+      # RESULT NOTIFICATIONS ---------------------------
+      # ------------------------------------------------
+
+      # Success
+      - name: Success notification
+        if: ${{ inputs.NOTIFICATIONS_ENABLED }}
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        uses: Ilshidur/action-discord@master
+        with:
+          args: |
+            
+            ----------------------------------------------
+
+            Success
+            **${{ inputs.SERVICE_NAME }}** build *${{ inputs.GH_RUN_NUMBER }}*.
+            Type: *${{ inputs.TYPE }}*
+
+            ----------------------------------------------
+
+      # Failure
+      - name: Failure notification
+        if: ${{ failure() && inputs.NOTIFICATIONS_ENABLED }}
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        uses: Ilshidur/action-discord@master
+        with:
+          args: |
+            
+            ----------------------------------------------
+
+            Failed
+            **${{ inputs.SERVICE_NAME }}** build *${{ inputs.GH_RUN_NUMBER }}*.
+            Type: *${{ inputs.TYPE }}*
+            Repo: https://github.com/DeviantsFactions/${{ inputs.REPO }}/actions
+
+            ----------------------------------------------
