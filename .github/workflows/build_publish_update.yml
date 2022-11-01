@@ -1,4 +1,4 @@
-name: Build
+name: Build, Publish and Update
 
 on:
   workflow_call:
@@ -168,53 +168,3 @@ jobs:
           -t $IMAGE_NAME_HASH \
           --build-arg REACT_APP_STAGE=$STAGE \
           . -f Dockerfile
-
-      # ------------------------------------------------
-      # DOCKER PUSH ------------------------------------
-      # ------------------------------------------------
-
-      #  REGISTRY AUTH (GCR)
-      - run: |
-          gcloud auth configure-docker -q
-      #  PUSH
-      - name: Docker push with branch name
-        run: |-
-          docker push $TARGET_IMAGE_NAME
-          docker push $IMAGE_NAME_HASH
-
-      # ------------------------------------------------
-      # CLOUD RUN DEPLOY -------------------------------
-      # ------------------------------------------------
-
-      # Withouth revision suffix
-      - uses: 'DeviantsFactions/deploy-cloudrun@v0.6.0'
-        if: ${{ (inputs.TYPE != 'preview') && (inputs.SERVICE_TYPE == 'cloud_run') }}
-        with:
-          service: ${{ inputs.GCRUN_SERVICE_NAME }}
-          image: ${{ env.TARGET_IMAGE_NAME }}
-      # With revision
-      - uses: 'DeviantsFactions/deploy-cloudrun@v0.6.0'
-        if: ${{ (inputs.TYPE == 'preview') && (inputs.SERVICE_TYPE == 'cloud_run') }}
-        with:
-          service: ${{ inputs.GCRUN_SERVICE_NAME }}
-          image: ${{ env.TARGET_IMAGE_NAME }}
-          tag: ${{ inputs.TAG_PREFIX }}-preview-${{ inputs.PR_NUMBER }}
-          suffix: -${{ inputs.PR_NUMBER }}
-
-      # Failure
-      - name: Failure notification
-        if: ${{ failure() && inputs.NOTIFICATIONS_ENABLED }}
-        env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-        uses: Ilshidur/action-discord@master
-        with:
-          args: |
-            
-            ----------------------------------------------
-
-            Failed
-            **${{ inputs.SERVICE_NAME }}** build *${{ inputs.GH_RUN_NUMBER }}*.
-            Type: *${{ inputs.TYPE }}*
-            Repo: https://github.com/DeviantsFactions/${{ inputs.REPO }}/actions
-
-            ----------------------------------------------
