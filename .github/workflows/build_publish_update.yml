@@ -65,6 +65,9 @@ on:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    env:
+      BRANCH_NAME: ${{ inputs.BRANCH_NAME }}
+      
     steps:
       - name: Starting notification
         env:
