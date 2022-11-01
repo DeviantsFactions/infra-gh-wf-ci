@@ -84,7 +84,6 @@ jobs:
         uses: Ilshidur/action-discord@master
         with:
           args: |
-            
             ----------------------------------------------
 
             *${{ inputs.ACTOR }}* started:
