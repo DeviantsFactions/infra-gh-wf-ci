@@ -6,6 +6,9 @@ on:
       ACTOR:
         required: true
         type: string
+      RUN-NAME:
+        required: true
+        type: string
       BRANCH_NAME:
         type: string
       NOTIFICATIONS_ENABLED:
@@ -125,7 +128,8 @@ jobs:
         with:
           args: |
             👷🏼 *${{ inputs.ACTOR }}* started **${{ inputs.SERVICE_NAME }}** build *${{ inputs.GH_RUN_NUMBER }}*.
-            URL: https://github.com/DeviantsFactions/${{ inputs.REPO }}/actions
+            ${{ github.event.head_commit.message }}
+            https://github.com/DeviantsFactions/${{ inputs.REPO }}/actions
             Environment: *${{ inputs.TYPE }}*
             ----------------------------------------------
 
@@ -277,7 +281,7 @@ jobs:
           args: |
             🚀 Success!
             **${{ inputs.SERVICE_NAME }}** build *${{ inputs.GH_RUN_NUMBER }}*.
-            Type: *${{ inputs.TYPE }}*
+            Environment: *${{ inputs.TYPE }}*
             ----------------------------------------------
 
       # Failure
@@ -288,10 +292,8 @@ jobs:
         uses: Ilshidur/action-discord@master
         with:
           args: |
-            ----------------------------------------------
             💀 Failed
             **${{ inputs.SERVICE_NAME }}** build *${{ inputs.GH_RUN_NUMBER }}*.
-            Type: *${{ inputs.TYPE }}*
+            Environment: *${{ inputs.TYPE }}*
             Repo: https://github.com/DeviantsFactions/${{ inputs.REPO }}/actions
-
             ----------------------------------------------
