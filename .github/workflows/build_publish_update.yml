@@ -124,13 +124,11 @@ jobs:
         uses: Ilshidur/action-discord@master
         with:
           args: |
-            ----------------------------------------------
-
-            🚀 *${{ inputs.ACTOR }}* started:
-            **${{ inputs.SERVICE_NAME }}** build *${{ inputs.GH_RUN_NUMBER }}*.
-            URL: https://github.com/DeviantsFactions/${{ inputs.REPO }}/actions
-            Type: *${{ inputs.TYPE }}*
-
+            ---------------------------------------------- \
+            🚀 *${{ inputs.ACTOR }}* started: \
+            **${{ inputs.SERVICE_NAME }}** build *${{ inputs.GH_RUN_NUMBER }}*. \
+            URL: https://github.com/DeviantsFactions/${{ inputs.REPO }}/actions \
+            Type: *${{ inputs.TYPE }}* \
             ----------------------------------------------
 
       # ------------------------------------------------
