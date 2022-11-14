@@ -68,7 +68,7 @@ jobs:
     name: Semgrep Scan
     # Only change the if you are self-hosting. See also:
     # https://docs.github.com/en/actions/using-jobs/choosing-the-runner-for-a-job#choosing-self-hosted-runners
-    runs-on: ubuntu-latest-16-cores
+    runs-on: ubuntu-latest
     container:
       # A Docker image with Semgrep installed. Don't change this.
       image: returntocorp/semgrep
@@ -91,7 +91,7 @@ jobs:
 
   build-and-push:
     needs: semgrep
-    runs-on: ubuntu-latest-16-cores
+    runs-on: ubuntu-latest
     env:
       BRANCH_NAME: ${{ inputs.BRANCH_NAME }}
       IMAGE_PATH: ${{ secrets.GCP_PROJECT_ID }}/${{ inputs.SERVICE_NAME }}
